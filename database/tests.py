@@ -249,7 +249,7 @@ class ImageTestCase(TestCase):
                                     current_image=image,
                                     is_flagged=False,
                                     by_admin=False )
-
+    
     def test_create(self):
         new_member = self.create_member("new-user")
         new_post = self.create_post("hello", new_member)
@@ -257,8 +257,48 @@ class ImageTestCase(TestCase):
         new_image = self.create_image(new_member,new_post, image)
         self.assertTrue(isinstance(new_image, Image))
         self.assertEqual(Image.objects.count(), 1)
+        
+    def test_class_create(self):
+        new_member = Member.create_memb(invited_by='Tamas', email='tamasp@gmail.com', password='4821',
+                                          first_name='Bobby', last_name='Builder', birthday='10/03/1929',
+                                          address='Nova Scotia')
+        new_post = self.create_post("hello???", new_member)
+        new_image = self.create_image(new_member,new_post, image)
+        self.assertTrue(isinstance(new_image, Image))
+        self.assertEqual(Image.objects.count(), 2) 
+     
+    def test_get_specific_data(self):
+        new_member = self.create_member("new-user")
+        new_post = self.create_post("hello", new_member)
+        new_image = self.create_image(new_member,new_post, imageID)
+        # get the originial_image_id
+        orig_img_id = new_image.data()['original_image_id']
+        # test that the image ID matches
+        self.assertEqual("imageID", orig_img_id)
+        
+    def test_set(self):
+        new_member = self.create_member("new-user")
+        new_post = self.create_post("hello", new_member)
+        new_image = self.create_image(new_member,new_post, imageID)
+        # set new orginal_image_id
+        new_image.set_orginal_image_id(3036)
+        # get the new id
+        new_id = new_image.data()['original_image_id]
+        self.assertEqual(3036, new_id) 
+                                  
+    def test_delete(self):
+        new_member = self.create_member("new-user")
+        new_post = self.create_post("hello", new_member)
+        new_image = self.create_image(new_member,new_post, imageID)
+        # assert statement to make sure new image is in database
+        self.assertEqual(Image.objects.count(),1)
+        # delete image by ID
+        id = new_image.data()['original_image_id']
+        Image.objects.filter(original_image_id=id).delete()
+        # assert statement to check that image was deleted (not in database)
+        self.assertEqual(Image.objects.count(), 0)
 
-
+        
 class FilterTestCase(TestCase): 
 
     def create_member(self,name,invitedby=None):
@@ -295,7 +335,18 @@ class FilterTestCase(TestCase):
         new_post = self.create_post("hello",new_member)
         image = tempfile.NamedTemporaryFile(suffix=".jpg").name
         new_image = self.create_image(new_member,new_post, image)
-        new_filter = self.create_filter(new_image)
+        new_filter = self.create_filter(new_image, filter_id)
 
         self.assertTrue(isinstance(new_filter, Filter))
         self.assertEqual(Filter.objects.count(), 1)
+                                  
+    def test_set(self):
+        new_member = self.create_member("new-user")
+        new_post = self.create_post("hello", new_member)
+        new_image = self.create_image(new_member,new_post, imageID)
+        new_filter = self.create_filter(new_image, filter_id)
+        # set new filter_id
+        new_filter.set_filter_id(2121)
+        # get the new id
+        new_id = new_filter.data()['filter_id]
+        self.assertEqual(2121, new_id) 
