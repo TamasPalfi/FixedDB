@@ -1,12 +1,13 @@
 from django.test import TestCase
 from database.models import Member, Post, Comment, CreditCard, Image, Filter
 import tempfile
+import unittest
 
 
 class MemberTestCase(TestCase): 
 
     # Test creating an member object
-    def create_member(self,name,invitedby=None):
+    def create_member(self, name, invitedby=None):
         return Member.objects.create(visibility=True,
                                     invitedby= invitedby,
                                     email="email@email.com",
@@ -22,15 +23,22 @@ class MemberTestCase(TestCase):
         new_member = self.create_member("new-user")
         self.assertTrue(isinstance(new_member, Member))
         # since we created a new member, the number should increase to 1
-        self.assertEqual(Member.objects.count(),1)
+        self.assertEqual(Member.objects.count(), 1)
+
+    def test_class_create(self):
+        new_member = Member.create_memb(invited_by='Owen', email='owenc@gmail.com', password='1234',
+                                          first_name='Owen', last_name='Carpenter', birthday='10/05/1997',
+                                          address='UMass')
+        self.assertTrue(isinstance(new_member, Member))
+        self.assertEqual(Member.objects.count(), 2)   # Is the other get method actually saving to the database?
 
     # Get the object
-    def test_get(self):
+    def test_get_specific_data(self):
         new_member = self.create_member("new-user")
         # # get the username
         username = new_member.data()['username']
         # make sure I get the expected value 
-        self.assertEqual("new-user",username)
+        self.assertEqual("new-user", username)
 
     # Get the object by id
     def test_get_byid(self):
@@ -40,7 +48,7 @@ class MemberTestCase(TestCase):
         # get member model by the id
         username = Member.objects.get(id=new_member_id).data()['username']
         # make sure I get the expected value 
-        self.assertEqual("new-user",username)
+        self.assertEqual("new-user", username)
     
     # Edit the object
     def test_edit(self):
@@ -49,7 +57,16 @@ class MemberTestCase(TestCase):
         new_member.set_username("new-user")
         # get new username
         new_name = new_member.data()['username']
-        self.assertEqual("new-user",new_name)
+        self.assertEqual("new-user", new_name)
+
+    def test_set_points(self):
+        new_member = Member.create_member(invited_by='Owen', email='owenc@gmail.com', password='1234',
+                                          first_name='Owen', last_name='Carpenter', birthday='10/05/1997',
+                                          address='UMass')
+
+        new_member = new_member.set_points(1)
+
+        self.assertEqual(new_member.data().points, 1)
 
     # Delete the object
     def test_delete(self):
@@ -63,25 +80,34 @@ class MemberTestCase(TestCase):
         Member.objects.filter(id=id).delete()
         
         # since we delete the object, there should be no member in the table.
-        self.assertEqual(Member.objects.count(),0)
+        self.assertEqual(Member.objects.count(), 0)
+
+    def test_remove_method(self):
+        new_member = Member.create_member(invited_by='Owen', email='owenc@gmail.com', password='1234',
+                                          first_name='Owen', last_name='Carpenter', birthday='10/05/1997',
+                                          address='UMass')
+        new_member.remove_member()
+
+        self.assertEqual(Member.objects.count(), 0)
     
     # Test Invite by 
     def test_inviteby(self):
         idol = self.create_member('idol')
-        member = self.create_member('member',idol)
+        member = self.create_member('member', idol)
 
         # check who invited member
         invitedby_id = member.data()['invitedby_id']
         who_invited_member = Member.objects.get(id=invitedby_id).data()['username']
 
         # Idol Invited Member
-        self.assertEqual("idol",who_invited_member)
+        self.assertEqual("idol", who_invited_member)
+
 
 class PostTestCase(TestCase): 
 
-    def create_member(self,name,invitedby=None):
+    def create_member(self, name, invitedby=None):
         return Member.objects.create(visibility=True,
-                                    invitedby= invitedby,
+                                    invited_by= invitedby,
                                     email="email@email.com",
                                     password="pwd",
                                     username=name,
@@ -91,7 +117,7 @@ class PostTestCase(TestCase):
                                     birthday="19980903",
                                     address="earth")
 
-    def create_post(self,content,user=None):
+    def create_post(self, content, user=None):
         return Post.objects.create(user = user,
                                    urls    = "www.test.com",
                                    is_flagged = False,
@@ -113,6 +139,7 @@ class PostTestCase(TestCase):
         writer_id = new_post.data()['user_id']
         writer_name = Member.objects.get(id=writer_id).data()['username']
         self.assertEqual("new-user",writer_name)
+
 
 class CommentTestCase(TestCase): 
 
@@ -163,6 +190,7 @@ class CommentTestCase(TestCase):
 
         self.assertEqual("hello",post_content)
 
+
 class CreditCardTestCase(TestCase): 
 
     def create_member(self,name,invitedby=None):
@@ -198,7 +226,7 @@ class ImageTestCase(TestCase):
 
     def create_member(self,name,invitedby=None):
         return Member.objects.create(visibility=True,
-                                    invitedby= invitedby,
+                                    invitedby=invitedby,
                                     email="email@email.com",
                                     password="pwd",
                                     username=name,
@@ -209,26 +237,27 @@ class ImageTestCase(TestCase):
                                     address="earth")
     
     def create_post(self,content,user=None):
-        return Post.objects.create(user = user,
-                                   urls    = "www.test.com",
-                                   is_flagged = False,
-                                   content = content,
-                                   by_admin = False)
+        return Post.objects.create(user=user,
+                                   urls="www.test.com",
+                                   is_flagged=False,
+                                   content=content,
+                                   by_admin=False)
 
     def create_image(self,user,post,image):
-        return Image.objects.create(user = user,
-                                    post = post,
+        return Image.objects.create(user=user,
+                                    post=post,
                                     current_image=image,
-                                    is_flagged = False,
-                                    by_admin = False )
+                                    is_flagged=False,
+                                    by_admin=False )
 
     def test_create(self):
         new_member = self.create_member("new-user")
-        new_post = self.create_post("hello",new_member)
+        new_post = self.create_post("hello", new_member)
         image = tempfile.NamedTemporaryFile(suffix=".jpg").name
-        new_image = self.create_image(new_member,new_post,image)
+        new_image = self.create_image(new_member,new_post, image)
         self.assertTrue(isinstance(new_image, Image))
-        self.assertEqual(Image.objects.count(),1)    
+        self.assertEqual(Image.objects.count(), 1)
+
 
 class FilterTestCase(TestCase): 
 
@@ -245,32 +274,28 @@ class FilterTestCase(TestCase):
                                     address="earth")
     
     def create_post(self,content,user=None):
-        return Post.objects.create(user = user,
-                                   urls    = "www.test.com",
-                                   is_flagged = False,
-                                   content = content,
-                                   by_admin = False)
+        return Post.objects.create(user=user,
+                                   urls="www.test.com",
+                                   is_flagged=False,
+                                   content=content,
+                                   by_admin=False)
 
     def create_image(self,user,post,image):
-        return Image.objects.create(user = user,
-                                    post = post,
+        return Image.objects.create(user=user,
+                                    post=post,
                                     current_image=image,
-                                    is_flagged = False,
-                                    by_admin = False )
+                                    is_flagged=False,
+                                    by_admin=False)
     
     def create_filter(self,image):
-        return Filter.objects.create(image=image,filter_name="test-filter")
+        return Filter.objects.create(image=image, filter_name="test-filter")
 
     def test_create(self):
         new_member = self.create_member("new-user")
         new_post = self.create_post("hello",new_member)
         image = tempfile.NamedTemporaryFile(suffix=".jpg").name
-        new_image = self.create_image(new_member,new_post,image)
+        new_image = self.create_image(new_member,new_post, image)
         new_filter = self.create_filter(new_image)
 
-        self.assertTrue(isinstance(new_filter,Filter))
-        self.assertEqual(Filter.objects.count(),1) 
-          
-       
-
-    
+        self.assertTrue(isinstance(new_filter, Filter))
+        self.assertEqual(Filter.objects.count(), 1)
