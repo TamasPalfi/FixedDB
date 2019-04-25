@@ -139,6 +139,15 @@ class PostTestCase(TestCase):
         writer_id = new_post.data()['user_id']
         writer_name = Member.objects.get(id=writer_id).data()['username']
         self.assertEqual("new-user",writer_name)
+       
+    #Rob wrote this, test to see if the functions in Models.py work
+    def test_set_urls(self):
+        new_member = self.create_member("new-user")
+        new_post = self.create_post("hello",new_member)
+        new_post.set_urls("www.cooltest.com")
+        url = new_post.data()['urls']
+        self.assertEqual("www.cooltest.com",url)
+    
 
 
 class CommentTestCase(TestCase): 
